@@ -10,6 +10,7 @@
 #include <string>
 #include <utils/String8.h>
 #include <v8.h>
+#include <libplatform/libplatform.h>
 #include <vector>
 
 #include "net_util.h"
@@ -705,7 +706,11 @@ ProxyResolverV8::ProxyResolverV8(
     ProxyErrorListener* error_listener)
     : context_(NULL), js_bindings_(custom_js_bindings),
       error_listener_(error_listener) {
-  v8::V8::Initialize();
+  if (v8::V8::GetCurrentPlatform() == NULL) {
+    v8::Platform* platform = v8::platform::CreateDefaultPlatform();
+    v8::V8::InitializePlatform(platform);
+    v8::V8::Initialize();
+  }
 }
 
 ProxyResolverV8::~ProxyResolverV8() {
