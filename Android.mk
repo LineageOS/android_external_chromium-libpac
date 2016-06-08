@@ -19,7 +19,7 @@ LOCAL_CFLAGS += \
   -Wno-format \
   -Wno-unused-parameter \
 
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/src $(LOCAL_PATH)/../v8
 
 LOCAL_STATIC_LIBRARIES := libv8
 
