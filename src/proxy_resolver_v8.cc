@@ -762,6 +762,12 @@ int ProxyResolverV8::SetPacScript(const android::String16& script_data) {
   if (script_data.size() == 0)
     return ERR_PAC_SCRIPT_FAILED;
 
+  // Use the built-in locale-aware definitions instead of the ones provided by
+  // ICU. This makes things like String.prototype.toUpperCase() not be
+  // undefined.
+  static const char kNoIcuCaseMapping[] = "--no-icu_case_mapping";
+  v8::V8::SetFlagsFromString(kNoIcuCaseMapping, strlen(kNoIcuCaseMapping));
+
   // Try parsing the PAC script.
   ArrayBufferAllocator allocator;
   v8::Isolate::CreateParams create_params;
