@@ -544,5 +544,21 @@ TEST(ProxyResolverV8Test, DNSResolutionOfInternationDomainName) {
   EXPECT_EQ("xn--bcher-kva.ch", bindings->dns_resolves_ex[0]);
 }
 
+TEST(ProxyResolverV8Test, StringPrototype) {
+  ProxyResolverV8WithMockBindings resolver(new MockJSBindings());
+  int result = resolver.SetPacScript(SCRIPT(STRING_FUNCTIONS_JS));
+  EXPECT_EQ(OK, result);
+
+  result = resolver.GetProxyForURL(kQueryUrl, kQueryHost, &kResults);
+
+  EXPECT_EQ(OK, result);
+  std::vector<std::string> proxies = string16ToProxyList(kResults);
+  EXPECT_EQ(proxies.size(), 1U);
+  EXPECT_EQ("DIRECT",proxies[0]);
+
+  EXPECT_EQ(0U, resolver.mock_js_bindings()->alerts.size());
+  EXPECT_EQ(0U, resolver.mock_js_bindings()->errors.size());
+}
+
 }  // namespace
 }  // namespace net
