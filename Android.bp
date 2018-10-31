@@ -1,0 +1,28 @@
+cc_library_shared {
+    name: "libpac",
+
+    srcs: [
+        "src/proxy_resolver_v8.cc",
+        "src/proxy_resolver_js_bindings.cc",
+        "src/net_util.cc",
+    ],
+
+    cflags: [
+        "-Wno-endif-labels",
+        "-Wno-import",
+        "-Wno-format",
+        "-Wno-unused-parameter",
+        "-Werror",
+    ],
+
+    export_include_dirs: ["src"],
+
+    static_libs: ["libv8"],
+
+    shared_libs: [
+        "libutils",
+        "liblog",
+        "libicuuc",
+        "libicui18n",
+    ],
+}
