@@ -6,7 +6,6 @@
 #define NET_PROXY_PROXY_RESOLVER_JS_BINDINGS_H_
 #pragma once
 
-#include <utils/String16.h>
 #include <string>
 
 namespace net {

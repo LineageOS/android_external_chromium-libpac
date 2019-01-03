@@ -20,7 +20,6 @@ cc_library_shared {
     static_libs: ["libv8"],
 
     shared_libs: [
-        "libutils",
         "liblog",
         "libicuuc",
         "libicui18n",
