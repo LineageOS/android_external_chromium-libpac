@@ -2,6 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifdef ANDROID
+#define LOG_TAG "libpac"
+#include <utils/Log.h>
+#endif
+
 #include "proxy_resolver_v8.h"
 
 #include <algorithm>
@@ -78,9 +83,32 @@ bool IsStringASCII(const android::String16& str) {
   return DoIsStringASCII(str);
 }
 
+#ifdef ANDROID
+#define LOG_ALERT(...) ALOGD(__VA_ARGS__)
+#define LOG_ERROR(...) ALOGE(__VA_ARGS__)
+#else
+#define LOG_ALERT(...) vprintf(__VA_ARGS__)
+#define LOG_ERROR(...) vfprintf(stderr, __VA_ARGS__)
+#endif
+
 namespace net {
 
 namespace {
+
+class DefaultProxyErrorListener : public ProxyErrorListener {
+public:
+    ~DefaultProxyErrorListener() {}
+    void AlertMessage(const android::String16 message) {
+        android::String8 str(message);
+        LOG_ALERT("Alert: %s", str.string());
+    }
+    void ErrorMessage(const android::String16 message) {
+        android::String8 str(message);
+        LOG_ERROR("Error: %s", str.string());
+    }
+};
+
+ProxyErrorListener* const defaultProxyErrorListener = new DefaultProxyErrorListener();
 
 // Pseudo-name for the PAC script.
 const char kPacResourceName[] = "proxy-pac-script.js";
@@ -713,6 +741,10 @@ class ProxyResolverV8::Context {
 // ProxyResolverV8 ------------------------------------------------------------
 
 bool ProxyResolverV8::initialized_for_this_process_ = false;
+
+ProxyResolverV8::ProxyResolverV8(ProxyResolverJSBindings* custom_js_bindings)
+    : ProxyResolverV8(custom_js_bindings, defaultProxyErrorListener) {
+}
 
 ProxyResolverV8::ProxyResolverV8(
     ProxyResolverJSBindings* custom_js_bindings,

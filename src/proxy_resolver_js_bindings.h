@@ -11,8 +11,6 @@
 
 namespace net {
 
-class ProxyErrorListener;
-
 // Interface for the javascript bindings.
 class ProxyResolverJSBindings {
  public:
