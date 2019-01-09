@@ -50,6 +50,8 @@ class ProxyResolverV8 {
   // Constructs a ProxyResolverV8 with custom bindings. ProxyResolverV8 takes
   // ownership of |custom_js_bindings| and deletes it when ProxyResolverV8
   // is destroyed.
+  explicit ProxyResolverV8(ProxyResolverJSBindings* custom_js_bindings);
+  // This constructor should only be used for test.
   explicit ProxyResolverV8(ProxyResolverJSBindings* custom_js_bindings,
           ProxyErrorListener* error_listener);
 
