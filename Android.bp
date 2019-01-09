@@ -19,10 +19,13 @@ cc_library_shared {
     export_include_dirs: ["includes"],
     local_include_dirs: ["src"],
 
-    static_libs: ["libv8"],
+    static_libs: [
+        "libv8",
+        // libpac lives in Runtime APEX. It can't use the shared liblog in /system/.
+        "liblog",
+    ],
 
     shared_libs: [
-        "liblog",
         "libicuuc",
         "libicui18n",
     ],
