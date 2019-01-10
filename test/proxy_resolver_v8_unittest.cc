@@ -13,7 +13,6 @@
 #include "proxy_test_script.h"
 #include "proxy_resolver_v8.h"
 
-using namespace android;
 namespace net {
 namespace {
 
@@ -49,20 +48,14 @@ class MockJSBindings : public ProxyResolverJSBindings, public ProxyErrorListener
     return !dns_resolve_ex_result.empty();
   }
 
-  virtual void AlertMessage(String16 message) {
-    String8 m8(message);
-    std::string mstd(m8.string());
-
-    ALOGD("PAC-alert: %s\n", mstd.c_str());  // Helpful when debugging.
-    alerts.push_back(mstd);
+  virtual void AlertMessage(const std::string& message) {
+    ALOGD("PAC-alert: %s\n", message.c_str());  // Helpful when debugging.
+    alerts.push_back(message);
   }
 
-  virtual void ErrorMessage(const String16 message) {
-    String8 m8(message);
-    std::string mstd(m8.string());
-
-    ALOGD("PAC-error: %s\n", mstd.c_str());  // Helpful when debugging.
-    errors.push_back(mstd);
+  virtual void ErrorMessage(const std::string& message) {
+    ALOGD("PAC-error: %s\n", message.c_str());  // Helpful when debugging.
+    errors.push_back(message);
   }
 
   virtual void Shutdown() {}
@@ -100,12 +93,12 @@ class ProxyResolverV8WithMockBindings : public ProxyResolverV8 {
 };
 
 // Doesn't really matter what these values are for many of the tests.
-const String16 kQueryUrl("http://www.google.com");
-const String16 kQueryHost("www.google.com");
-String16 kResults;
+const std::u16string kQueryUrl(u"http://www.google.com");
+const std::u16string kQueryHost(u"www.google.com");
+std::u16string kResults;
 
-String16 currentPac;
-#define SCRIPT(x) (currentPac = String16(x))
+std::u16string currentPac;
+#define SCRIPT(x) (currentPac = std::u16string(x))
 
 void addString(std::vector<std::string>* list, std::string str) {
   if (str.compare(0, 6, "DIRECT") == 0) {
@@ -117,9 +110,9 @@ void addString(std::vector<std::string>* list, std::string str) {
   }
 }
 
-std::vector<std::string> string16ToProxyList(String16 response) {
+std::vector<std::string> string16ToProxyList(const std::u16string& response) {
     std::vector<std::string> ret;
-    String8 response8(response);
+    android::String8 response8(response.data());
     std::string rstr(response8.string());
     if (rstr.find(';') == std::string::npos) {
         addString(&ret, rstr);
@@ -187,8 +180,8 @@ TEST(ProxyResolverV8Test, Basic) {
   // arguments into a pseudo-host. The purpose of this test is to verify that
   // the correct arguments are being passed to FindProxyForURL().
   {
-    String16 queryUrl("http://query.com/path");
-    String16 queryHost("query.com");
+    std::u16string queryUrl(u"http://query.com/path");
+    std::u16string queryHost(u"query.com");
     result = resolver.GetProxyForURL(queryUrl, queryHost, &kResults);
     EXPECT_EQ(OK, result);
     std::vector<std::string> proxies = string16ToProxyList(kResults);
@@ -196,8 +189,8 @@ TEST(ProxyResolverV8Test, Basic) {
     EXPECT_EQ("http.query.com.path.query.com", proxies[0]);
   }
   {
-    String16 queryUrl("ftp://query.com:90/path");
-    String16 queryHost("query.com");
+    std::u16string queryUrl(u"ftp://query.com:90/path");
+    std::u16string queryHost(u"query.com");
     int result = resolver.GetProxyForURL(queryUrl, queryHost, &kResults);
 
     EXPECT_EQ(OK, result);
@@ -223,12 +216,12 @@ TEST(ProxyResolverV8Test, BadReturnType) {
   // These are the files of PAC scripts which each return a non-string
   // types for FindProxyForURL(). They should all fail with
   // ERR_PAC_SCRIPT_FAILED.
-  static const String16 files[] = {
-      String16(RETURN_UNDEFINED_JS),
-      String16(RETURN_INTEGER_JS),
-      String16(RETURN_FUNCTION_JS),
-      String16(RETURN_OBJECT_JS),
-      String16(RETURN_NULL_JS)
+  static const std::u16string files[] = {
+      std::u16string(RETURN_UNDEFINED_JS),
+      std::u16string(RETURN_INTEGER_JS),
+      std::u16string(RETURN_FUNCTION_JS),
+      std::u16string(RETURN_OBJECT_JS),
+      std::u16string(RETURN_NULL_JS)
   };
 
   for (size_t i = 0; i < 5; ++i) {
@@ -522,7 +515,7 @@ TEST(ProxyResolverV8Test, DNSResolutionFailure) {
 TEST(ProxyResolverV8Test, DNSResolutionOfInternationDomainName) {
     return;
   ProxyResolverV8WithMockBindings resolver(new MockJSBindings());
-  int result = resolver.SetPacScript(String16(INTERNATIONAL_DOMAIN_NAMES_JS));
+  int result = resolver.SetPacScript(SCRIPT(INTERNATIONAL_DOMAIN_NAMES_JS));
   EXPECT_EQ(OK, result);
 
   // Execute FindProxyForURL().
@@ -562,7 +555,7 @@ TEST(ProxyResolverV8Test, StringPrototype) {
 
 TEST(ProxyResolverV8Test, GetterChangesElementKind) {
   ProxyResolverV8WithMockBindings resolver(new MockJSBindings());
-  int result = resolver.SetPacScript(String16(CHANGE_ELEMENT_KIND_JS));
+  int result = resolver.SetPacScript(SCRIPT(CHANGE_ELEMENT_KIND_JS));
   EXPECT_EQ(OK, result);
 
   // Execute FindProxyForURL().
