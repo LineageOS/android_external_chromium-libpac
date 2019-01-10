@@ -736,9 +736,10 @@ int ProxyResolverV8::GetProxyForURL(const std::u16string& spec, const std::u16st
                                     std::u16string* results) {
   // If the V8 instance has not been initialized (either because
   // SetPacScript() wasn't called yet, or because it failed.
-  if (context_ == NULL)
+  if (context_ == NULL) {
+    error_listener_->ErrorMessage(std::string("Context is null."));
     return ERR_FAILED;
-
+  }
   // Otherwise call into V8.
   int rv = context_->ResolveProxy(spec, host, results);
 
