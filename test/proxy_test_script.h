@@ -5,6 +5,7 @@
 #define PROXY_TEST_SCRIPT_H_
 
 #define BINDING_FROM_GLOBAL_JS \
+  u""\
   "// Calls a bindings outside of FindProxyForURL(). This causes the code to\n" \
   "// get exercised during initialization.\n" \
   "\n" \
@@ -15,6 +16,7 @@
   "}\n" \
 
 #define BINDINGS_JS \
+  u""\
   "// Try calling the browser-side bound functions with varying (invalid)\n" \
   "// inputs. There is no notion of \"success\" for this test, other than\n" \
   "// verifying the correct C++ bindings were reached with expected values.\n" \
@@ -79,8 +81,9 @@
   "\n" \
 
 #define CHANGE_ELEMENT_KIND_JS \
+  u""\
   "// PAC script with getter that changes element kind.\n" \
-  "	\n" \
+  "\n" \
   "function FindProxyForURL(url, host) {\n" \
   "  let arr = [];\n" \
   "  arr[1000] = 0x1234;\n" \
@@ -91,17 +94,19 @@
   "  });\n" \
   "\n" \
   "  let results = Object.entries(arr);\n" \
-  "  let str = results.toString(); \n" \
+  "  let str = results.toString();\n" \
   "  return \"DIRECT\";\n" \
   "}\n" \
 
 #define DIRECT_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return \"DIRECT\";\n" \
   "}\n" \
   "\n" \
 
 #define DNS_FAIL_JS \
+  u""\
   "// This script should be run in an environment where all DNS resolution are\n" \
   "// failing. It tests that functions return the expected values.\n" \
   "//\n" \
@@ -131,6 +136,7 @@
   "\n" \
 
 #define ENDS_WITH_COMMENT_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return \"PROXY success:80\";\n" \
   "}\n" \
@@ -141,11 +147,13 @@
   "// those extra functions was being considered part of the comment.\n" \
 
 #define ENDS_WITH_STATEMENT_NO_SEMICOLON_JS \
+  u""\
   "// Ends with a statement, and no terminal newline.\n" \
   "function FindProxyForURL(url, host) { return \"PROXY success:\" + x; }\n" \
   "x = 3\n" \
 
 #define INTERNATIONAL_DOMAIN_NAMES_JS \
+  u""\
   "// Try resolving hostnames containing non-ASCII characters.\n" \
   "\n" \
   "function FindProxyForURL(url, host) {\n" \
@@ -164,6 +172,7 @@
   "\n" \
 
 #define MISSING_CLOSE_BRACE_JS \
+  u""\
   "// This PAC script is invalid, because there is a missing close brace\n" \
   "// on the function FindProxyForURL().\n" \
   "\n" \
@@ -172,10 +181,12 @@
   "\n" \
 
 #define NO_ENTRYPOINT_JS \
+  u""\
   "var x = \"This is an invalid PAC script because it lacks a \" +\n" \
   "        \"FindProxyForURL() function\";\n" \
 
 #define PAC_LIBRARY_UNITTEST_JS \
+  u""\
   "// This should output \"PROXY success:80\" if all the tests pass.\n" \
   "// Otherwise it will output \"PROXY failure:<num-failures>\".\n" \
   "//\n" \
@@ -544,6 +555,7 @@
   "\n" \
 
 #define PASSTHROUGH_JS \
+  u""\
   "// Return a single-proxy result, which encodes ALL the arguments that were\n" \
   "// passed to FindProxyForURL().\n" \
   "\n" \
@@ -591,48 +603,56 @@
   "}\n" \
 
 #define RETURN_EMPTY_STRING_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return \"\";\n" \
   "}\n" \
   "\n" \
 
 #define RETURN_FUNCTION_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return FindProxyForURL;\n" \
   "}\n" \
   "\n" \
 
 #define RETURN_INTEGER_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return 0;\n" \
   "}\n" \
   "\n" \
 
 #define RETURN_NULL_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return null;\n" \
   "}\n" \
   "\n" \
 
 #define RETURN_OBJECT_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return {result: \"PROXY foo\"};\n" \
   "}\n" \
   "\n" \
 
 #define RETURN_UNDEFINED_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return undefined;\n" \
   "}\n" \
   "\n" \
 
 #define RETURN_UNICODE_JS \
+  u""\
   "// U+200B is the codepoint for zero-width-space.\n" \
   "function FindProxyForURL(url, host) {\n" \
   "  return \"PROXY foo.com\u200B\";\n" \
   "}\n" \
 
 #define SIDE_EFFECTS_JS \
+  u""\
   "if (!gCounter) {\n" \
   "  // We write it this way so if the script gets loaded twice,\n" \
   "  // gCounter remains dirty.\n" \
@@ -645,6 +665,7 @@
   "\n" \
 
 #define SIMPLE_JS \
+  u""\
   "// PAC script which uses isInNet on both IP addresses and hosts, and calls\n" \
   "// isResolvable().\n" \
   "\n" \
@@ -668,12 +689,13 @@
   "}\n" \
 
 #define STRING_FUNCTIONS_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  return \"direct\".toUpperCase();\n" \
   "}\n" \
-  "\n" \
 
 #define UNHANDLED_EXCEPTION_JS \
+  u""\
   "function FindProxyForURL(url, host) {\n" \
   "  // This will throw a runtime exception.\n" \
   "  return \"PROXY x\" + undefined_variable;\n" \
