@@ -9,15 +9,9 @@
 #include <string>
 
 #include "proxy_resolver_js_bindings.h"
+#include "proxy_resolver_v8_wrapper.h"
 
 namespace net {
-
-typedef void* RequestHandle;
-typedef void* CompletionCallback;
-
-#define OK 0
-#define ERR_PAC_SCRIPT_FAILED -1
-#define ERR_FAILED -2
 
 class ProxyErrorListener {
 protected:

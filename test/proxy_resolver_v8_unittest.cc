@@ -11,6 +11,7 @@
 
 #include "android_runtime/AndroidRuntime.h"
 #include "proxy_test_script.h"
+#include "proxy_resolver_v8_wrapper.h"
 #include "proxy_resolver_v8.h"
 
 namespace net {
@@ -110,6 +111,18 @@ void addString(std::vector<std::string>* list, std::string str) {
   }
 }
 
+std::unique_ptr<ProxyResolverV8Handle, void(*)(ProxyResolverV8Handle*)> newProxyResolverV8Handle() {
+  return std::unique_ptr<ProxyResolverV8Handle, void(*)(ProxyResolverV8Handle*)>(
+          ProxyResolverV8Handle_new(), &ProxyResolverV8Handle_delete);
+}
+
+std::unique_ptr<char16_t, decltype(&free)> getProxyForURL(ProxyResolverV8Handle* handle,
+                                                         const char16_t* spec,
+                                                         const char16_t* host) {
+  return std::unique_ptr<char16_t, decltype(&free)>(
+      ProxyResolverV8Handle_GetProxyForURL(handle, spec, host), &free);
+}
+
 std::vector<std::string> string16ToProxyList(const std::u16string& response) {
     std::vector<std::string> ret;
     android::String8 response8(response.data());
@@ -154,6 +167,21 @@ TEST(ProxyResolverV8Test, Direct) {
 
   EXPECT_EQ(0U, resolver.mock_js_bindings()->alerts.size());
   EXPECT_EQ(0U, resolver.mock_js_bindings()->errors.size());
+}
+
+TEST(ProxyResolverV8Test, Direct_C_API) {
+  auto handle = newProxyResolverV8Handle();
+  int result = ProxyResolverV8Handle_SetPacScript(handle.get(), DIRECT_JS);
+  EXPECT_EQ(OK, result);
+
+  std::unique_ptr<char16_t, decltype(&free)> result_list = getProxyForURL(
+      handle.get(), kQueryUrl.data(), kQueryHost.data());
+
+  ASSERT_NE(nullptr, result_list.get());
+  kResults = result_list.get();
+  std::vector<std::string> proxies = string16ToProxyList(kResults);
+  EXPECT_EQ(proxies.size(), 1U);
+  EXPECT_EQ("DIRECT",proxies[0]);
 }
 
 TEST(ProxyResolverV8Test, ReturnEmptyString) {
@@ -212,6 +240,23 @@ TEST(ProxyResolverV8Test, Basic) {
   resolver.PurgeMemory();
 }
 
+TEST(ProxyResolverV8Test, Basic_C_API) {
+  auto handle = newProxyResolverV8Handle();
+  int result = ProxyResolverV8Handle_SetPacScript(handle.get(), PASSTHROUGH_JS);
+  EXPECT_EQ(OK, result);
+
+  // The "FindProxyForURL" of this PAC script simply concatenates all of the
+  // arguments into a pseudo-host. The purpose of this test is to verify that
+  // the correct arguments are being passed to FindProxyForURL().
+  std::unique_ptr<char16_t, decltype(&free)> result_list = getProxyForURL(
+      handle.get(), u"http://query.com/path", u"query.com");
+  ASSERT_NE(nullptr, result_list.get());
+  kResults = result_list.get();
+  std::vector<std::string> proxies = string16ToProxyList(kResults);
+  EXPECT_EQ(1U, proxies.size());
+  EXPECT_EQ("http.query.com.path.query.com", proxies[0]);
+}
+
 TEST(ProxyResolverV8Test, BadReturnType) {
   // These are the files of PAC scripts which each return a non-string
   // types for FindProxyForURL(). They should all fail with
@@ -266,10 +311,20 @@ TEST(ProxyResolverV8Test, ParseError) {
   EXPECT_EQ(0U, bindings->alerts.size());
 
   // We get one error during compilation.
-  ASSERT_EQ(1U, bindings->errors.size());
+  ASSERT_EQ(2U, bindings->errors.size());
 
   EXPECT_EQ("Uncaught SyntaxError: Unexpected end of input",
             bindings->errors[0]);
+  EXPECT_EQ("Context is null.", bindings->errors[1]);
+}
+
+TEST(ProxyResolverV8Test, ParseError_C_API) {
+  auto handle = newProxyResolverV8Handle();
+  int result = ProxyResolverV8Handle_SetPacScript(handle.get(), MISSING_CLOSE_BRACE_JS);
+  EXPECT_EQ(ERR_PAC_SCRIPT_FAILED, result);
+  std::unique_ptr<char16_t, decltype(&free)> result_list = getProxyForURL(
+      handle.get(), u"http://query.com/path", u"query.com");
+  EXPECT_EQ(nullptr, result_list.get());
 }
 
 // Run a PAC script several times, which has side-effects.
@@ -359,6 +414,9 @@ TEST(ProxyResolverV8Test, NoSetPacScript) {
   // Resolve should fail, as we are not yet initialized with a script.
   int result = resolver.GetProxyForURL(kQueryUrl, kQueryHost, &kResults);
   EXPECT_EQ(ERR_FAILED, result);
+  EXPECT_EQ(0U, resolver.mock_js_bindings()->alerts.size());
+  EXPECT_EQ(1U, resolver.mock_js_bindings()->errors.size());
+  EXPECT_EQ("Context is null.", resolver.mock_js_bindings()->errors[0]);
 
   // Initialize it.
   result = resolver.SetPacScript(SCRIPT(DIRECT_JS));
@@ -375,6 +433,10 @@ TEST(ProxyResolverV8Test, NoSetPacScript) {
   result = resolver.GetProxyForURL(kQueryUrl, kQueryHost, &kResults);
   EXPECT_EQ(ERR_FAILED, result);
 
+  EXPECT_EQ(0U, resolver.mock_js_bindings()->alerts.size());
+  EXPECT_EQ(2U, resolver.mock_js_bindings()->errors.size());
+  EXPECT_EQ("Context is null.", resolver.mock_js_bindings()->errors[1]);
+
   // Load a good script once more.
   result = resolver.SetPacScript(SCRIPT(DIRECT_JS));
   EXPECT_EQ(OK, result);
@@ -382,7 +444,7 @@ TEST(ProxyResolverV8Test, NoSetPacScript) {
   EXPECT_EQ(OK, result);
 
   EXPECT_EQ(0U, resolver.mock_js_bindings()->alerts.size());
-  EXPECT_EQ(0U, resolver.mock_js_bindings()->errors.size());
+  EXPECT_EQ(2U, resolver.mock_js_bindings()->errors.size());
 }
 
 // Test marshalling/un-marshalling of values between C++/V8.
