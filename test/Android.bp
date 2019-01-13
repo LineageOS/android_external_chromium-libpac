@@ -3,6 +3,8 @@ cc_test {
 
     srcs: ["proxy_resolver_v8_unittest.cc"],
 
+    include_dirs: ["external/chromium-libpac/src"],
+
     cflags: [
         "-Wno-endif-labels",
         "-Wno-import",

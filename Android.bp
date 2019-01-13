@@ -3,6 +3,7 @@ cc_library_shared {
 
     srcs: [
         "src/proxy_resolver_v8.cc",
+        "src/proxy_resolver_v8_wrapper.cc",
         "src/proxy_resolver_js_bindings.cc",
         "src/net_util.cc",
     ],
@@ -15,14 +16,24 @@ cc_library_shared {
         "-Werror",
     ],
 
-    export_include_dirs: ["src"],
+    export_include_dirs: ["includes"],
+    local_include_dirs: ["src"],
 
-    static_libs: ["libv8"],
+    static_libs: [
+        "libv8",
+        // libpac lives in Runtime APEX. It can't use the shared liblog in /system/.
+        "liblog",
+    ],
 
     shared_libs: [
-        "libutils",
-        "liblog",
         "libicuuc",
         "libicui18n",
     ],
+
+    stubs: {
+        symbol_file: "libpac.map.txt",
+        versions: [
+            "1",
+        ],
+    },
 }
