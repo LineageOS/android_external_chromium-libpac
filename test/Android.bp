@@ -11,6 +11,9 @@ cc_test {
         "-Wno-format",
     ],
 
+    // Use the non-APEX version for C++ API.
+    bootstrap: true,
+
     shared_libs: [
         "libpac",
         "libutils",
