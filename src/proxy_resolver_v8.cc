@@ -389,7 +389,7 @@ class ProxyResolverV8::Context {
         UTF16StringToV8String(isolate_, url),
         UTF16StringToV8String(isolate_, host) };
 
-    v8::TryCatch try_catch;
+    v8::TryCatch try_catch(isolate_);
     v8::Local<v8::Value> ret = v8::Function::Cast(*function)->Call(
         context->Global(), 2, argv);
 
@@ -425,7 +425,7 @@ class ProxyResolverV8::Context {
     v8_this_.Reset(isolate_, v8::External::New(isolate_, this));
     v8::Local<v8::External> v8_this =
         v8::Local<v8::External>::New(isolate_, v8_this_);
-    v8::Local<v8::ObjectTemplate> global_template = v8::ObjectTemplate::New();
+    v8::Local<v8::ObjectTemplate> global_template = v8::ObjectTemplate::New(isolate_);
 
     // Attach the javascript bindings.
     v8::Local<v8::FunctionTemplate> alert_template =
@@ -523,16 +523,18 @@ class ProxyResolverV8::Context {
   // Compiles and runs |script| in the current V8 context.
   // Returns OK on success, otherwise an error code.
   int RunScript(v8::Handle<v8::String> script, const char* script_name) {
-    v8::TryCatch try_catch;
+    v8::Local<v8::Context> context =
+        v8::Local<v8::Context>::New(isolate_, v8_context_);
+    v8::TryCatch try_catch(isolate_);
 
     // Compile the script.
     v8::ScriptOrigin origin =
         v8::ScriptOrigin(ASCIILiteralToV8String(isolate_, script_name));
-    v8::Local<v8::Script> code = v8::Script::Compile(script, &origin);
+    v8::MaybeLocal<v8::Script> code = v8::Script::Compile(context, script, &origin);
 
     // Execute.
     if (!code.IsEmpty())
-      code->Run();
+      code.ToLocalChecked()->Run(context);
 
     // Check for errors.
     if (try_catch.HasCaught()) {
@@ -758,11 +760,9 @@ int ProxyResolverV8::SetPacScript(const std::u16string& script_data) {
   if (script_data.length() == 0)
     return ERR_PAC_SCRIPT_FAILED;
 
-  // Use the built-in locale-aware definitions instead of the ones provided by
-  // ICU. This makes things like String.prototype.toUpperCase() not be
-  // undefined.
-  static const char kNoIcuCaseMapping[] = "--no-icu_case_mapping";
-  v8::V8::SetFlagsFromString(kNoIcuCaseMapping, strlen(kNoIcuCaseMapping));
+  // To help debugging v8 initialization issues, uncomment the following lines
+  // static const char kOptions[] = "--log_all --print_all_exceptions";
+  // v8::V8::SetFlagsFromString(kOptions, strlen(kOptions));
 
   // Try parsing the PAC script.
   ArrayBufferAllocator allocator;
