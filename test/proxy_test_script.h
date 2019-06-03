@@ -4,6 +4,30 @@
 #ifndef PROXY_TEST_SCRIPT_H_
 #define PROXY_TEST_SCRIPT_H_
 
+#define B_132073833_JS \
+  u""\
+  "function FindProxyForURL(url, host){\n" \
+  "    function opt() {\n" \
+  "        opt['x'] = 1.1;\n" \
+  "        try {\n" \
+  "            Object.create(object);\n" \
+  "        } catch (e) {\n" \
+  "        }\n" \
+  "\n" \
+  "        for (let i = 0; i < 100000; i++) {\n" \
+  "\n" \
+  "        }\n" \
+  "    }\n" \
+  "\n" \
+  "    opt();\n" \
+  "    object = opt;\n" \
+  "    opt();\n" \
+  "\n" \
+  "    return \"DIRECT\";\n" \
+  "}\n" \
+  "\n" \
+  "var object;\n" \
+
 #define BINDING_FROM_GLOBAL_JS \
   u""\
   "// Calls a bindings outside of FindProxyForURL(). This causes the code to\n" \
