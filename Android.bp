@@ -13,6 +13,7 @@ cc_library_shared {
         "-Wno-import",
         "-Wno-format",
         "-Wno-unused-parameter",
+        "-Wno-non-virtual-dtor",
         "-Werror",
     ],
 
